@@ -1,0 +1,33 @@
+{
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  },
+  "scripts": {
+    "setup": "npm install && npm run delete:canister-ids && npm run delete:aasa && npm run init:app-json && npm run ii:setup && npm run frontend:setup && npm run ii-integration:setup",
+    "dfx:start": "dfxvm update && dfx start --clean",
+    "dfx:deploy": "dfx deps deploy && dfx deploy --yes",
+    "dfx:deploy:playground": "dfx deploy --playground --yes",
+    "dfx:deploy:ic": "dfx deploy --ic --yes",
+    "ssl:canisters": "local-ssl-proxy --key ./.mkcert/192.168.0.210-key.pem --cert ./.mkcert/192.168.0.210.pem --source 14943 --target 4943",
+    "ssl:ii": "local-ssl-proxy --key ./.mkcert/192.168.0.210-key.pem --cert ./.mkcert/192.168.0.210.pem --source 24943 --target 4943",
+    "frontend:setup": "npm run setup --prefix src/frontend",
+    "frontend:start": "npm run start --prefix src/frontend",
+    "frontend:eas:init": "npm run eas:init --prefix src/frontend",
+    "frontend:eas:device:create": "npm run eas:device:create --prefix src/frontend",
+    "frontend:eas:credentials": "npm run eas:credentials --prefix src/frontend",
+    "frontend:eas:build:android:preview": "npm run eas:build:android:preview --prefix src/frontend",
+    "frontend:eas:build:ios:preview": "npm run eas:build:ios:preview --prefix src/frontend",
+    "ii:setup": "dfx deps pull && dfx deps init",
+    "ii-integration:setup": "npm run setup --prefix src/ii-integration",
+    "delete:canister-ids": "node -e \"import('fs').then(fs => { try { fs.unlinkSync('./canister_ids.json'); } catch (e) {} })\"",
+    "delete:aasa": "node -e \"import('fs').then(fs => { try { fs.rmSync('src/frontend/public/.well-known/apple-app-site-association', { force: true }); } catch(e) {} })\"",
+    "init:app-json": "node scripts/init-app-json.mjs"
+  },
+  "name": "expo-icp-supply-chain",
+  "type": "module",
+  "description": "This project is for supply chain management using Expo and ICP",
+  "devDependencies": {
+    "local-ssl-proxy": "^2.0.5"
+  }
+}

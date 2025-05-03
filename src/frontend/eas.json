@@ -1,0 +1,33 @@
+{
+  "cli": {
+    "version": ">= 14.0.3",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_EAS_BUILD_PROFILE": "development",
+        "EXPO_PUBLIC_EAS_DEEP_LINK_TYPE": "legacy"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_EAS_BUILD_PROFILE": "preview",
+        "EXPO_PUBLIC_EAS_DEEP_LINK_TYPE": "modern"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_EAS_BUILD_PROFILE": "production",
+        "EXPO_PUBLIC_EAS_DEEP_LINK_TYPE": "modern"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

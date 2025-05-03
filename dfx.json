@@ -1,0 +1,55 @@
+{
+  "canisters": {
+    "internet-identity": {
+      "type": "pull",
+      "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+    },
+    "ii-integration": {
+      "dependencies": [
+        "internet-identity"
+      ],
+      "source": [
+        "src/ii-integration/dist"
+      ],
+      "type": "assets",
+      "build": "node scripts/setup-env.mjs && npm run build --prefix src/ii-integration"
+    },
+    "issuer": {
+      "dependencies": [
+      ],
+      "source": [
+        "src/issuer/dist"
+      ],
+      "type": "assets",
+      "build": "npm run build --prefix src/issuer"
+    },
+    "backend": {
+      "candid": "src/backend/backend.did",
+      "package": "backend",
+      "type": "custom",
+      "wasm": "target/wasm32-unknown-unknown/release/backend.wasm",
+      "build": "sh ./scripts/build-backend.sh"
+    },
+    "frontend": {
+      "dependencies": [
+        "ii-integration",
+        "backend"
+      ],
+      "source": [
+        "src/frontend/dist"
+      ],
+      "type": "assets",
+      "build": "npm run build --prefix src/frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "networks": {
+  },
+  "output_env_file": "src/frontend/constants/env.txt",
+  "version": 1
+}
