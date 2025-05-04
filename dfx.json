@@ -14,15 +14,6 @@
       "type": "assets",
       "build": "node scripts/setup-env.mjs && npm run build --prefix src/ii-integration"
     },
-    "issuer": {
-      "dependencies": [
-      ],
-      "source": [
-        "src/issuer/dist"
-      ],
-      "type": "assets",
-      "build": "npm run build --prefix src/issuer"
-    },
     "backend": {
       "candid": "src/backend/backend.did",
       "package": "backend",

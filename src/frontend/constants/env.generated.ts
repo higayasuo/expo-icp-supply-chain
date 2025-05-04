@@ -8,4 +8,4 @@ export const CANISTER_ID_BACKEND = 'uxrrr-q7777-77774-qaaaq-cai';
 export const CANISTER_ID_FRONTEND = 'u6s2n-gx777-77774-qaaba-cai';
 export const CANISTER_ID_II_INTEGRATION = 'uzt4z-lp777-77774-qaabq-cai';
 export const CANISTER_ID_ISSUER = 'umunu-kh777-77774-qaaca-cai';
-export const EXPO_SCHEME = 'oid4vc-wallet';
+export const EXPO_SCHEME = 'expo-icp-supply-chain';
