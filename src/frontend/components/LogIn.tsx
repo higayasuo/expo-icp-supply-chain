@@ -5,6 +5,7 @@ import { useIIIntegrationContext } from 'expo-ii-integration';
 
 type LogInProps = {
   redirectPath?: string;
+  onLogin?: () => void;
 };
 
 /**
@@ -18,6 +19,7 @@ export const LogIn = (props?: LogInProps) => {
     setBusy(true);
     try {
       await login(props);
+      props?.onLogin?.();
     } finally {
       setBusy(false);
     }
