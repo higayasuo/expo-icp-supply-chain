@@ -3,21 +3,8 @@ import { resolve } from 'path';
 
 export default defineConfig({
   test: {
-    environment: 'jsdom',
+    environment: 'node',
     globals: true,
-    deps: {
-      optimizer: {
-        web: {
-          include: [
-            '@dfinity/agent',
-            '@dfinity/auth-client',
-            '@dfinity/identity',
-            'expo-crypto',
-            'react-native',
-          ],
-        },
-      },
-    },
   },
   resolve: {
     alias: {

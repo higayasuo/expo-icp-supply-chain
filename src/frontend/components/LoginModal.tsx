@@ -2,23 +2,22 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { buttonTextStyles } from './styles';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useRouter } from 'expo-router';
 import { useIIIntegrationContext } from 'expo-ii-integration';
+import { roleStorage } from '@/storage';
 
 type SupplyChainRole = 'upstream' | 'middlestream' | 'downstream';
 
 export const LoginModal = () => {
   const [busy, setBusy] = useState(false);
-  const router = useRouter();
   const { login } = useIIIntegrationContext();
 
   const handleRoleSelect = async (role: SupplyChainRole) => {
     setBusy(true);
     try {
+      await roleStorage.save(role);
       await login({
         redirectPath: `/${role}`,
       });
-      //router.replace(`/${role}`);
     } finally {
       setBusy(false);
     }
@@ -27,7 +26,7 @@ export const LoginModal = () => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Supply Chain Management</Text>
+        <Text style={styles.title}>Supply Chain Management Login</Text>
         <Text style={styles.message}>
           Please select your role in the supply chain to continue.
         </Text>

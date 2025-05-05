@@ -17,7 +17,9 @@ export const RoleHeader = ({ title, iconName }: RoleHeaderProps) => {
         color="#007AFF"
         style={styles.icon}
       />
-      <Text style={styles.title}>{title}</Text>
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>{title}</Text>
+      </View>
       <View style={styles.logoutContainer}>
         <LogOut />
       </View>
@@ -37,11 +39,14 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: 12,
   },
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
     color: '#333',
-    flex: 1,
   },
   logoutContainer: {
     marginLeft: 'auto',

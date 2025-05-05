@@ -1,15 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { RoleHeader } from '@/components/RoleHeader';
+import { router } from 'expo-router';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function UpstreamScreen() {
   return (
     <View style={styles.container}>
-      <RoleHeader title="Upstream Operations" iconName="industry" />
+      <RoleHeader title="Upstream Operations" iconName="industry" centerTitle />
       <View style={styles.content}>
         <Text style={styles.description}>
           Manage your production and manufacturing processes
         </Text>
+
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => router.push('/upstream/ship-parts')}
+        >
+          <View style={styles.cardHeader}>
+            <FontAwesome name="truck" size={24} color="#007AFF" />
+            <Text style={styles.cardTitle}>Ship Parts</Text>
+          </View>
+          <Text style={styles.cardDescription}>
+            Create and manage parts deliveries to middlestream
+          </Text>
+        </TouchableOpacity>
+
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Production Dashboard</Text>
           <Text style={styles.cardDescription}>
@@ -63,11 +79,16 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 8,
+    marginLeft: 12,
   },
   cardDescription: {
     fontSize: 14,
