@@ -22,13 +22,16 @@ export default function ShipPartsScreen() {
   const [receivedDeliveries, setReceivedDeliveries] = useState<Delivery[]>([]);
   const [selectedProofOfDelivery, setSelectedProofOfDelivery] =
     useState<Delivery | null>(null);
+  const [shippedDeliveries, setShippedDeliveries] = useState<Delivery[]>([]);
 
   useEffect(() => {
     const fetchDeliveries = async () => {
       const deliveries = await upToMiddleDeliveriesStorage.find();
       if (deliveries) {
         const received = deliveries.filter((d) => d.status === 'received');
+        const shipped = deliveries.filter((d) => d.status === 'in-transit');
         setReceivedDeliveries(received);
+        setShippedDeliveries(shipped);
       }
     };
     fetchDeliveries();
@@ -78,6 +81,7 @@ export default function ShipPartsScreen() {
     setCurrentPartNumber('');
     setCurrentQuantity('');
     setChildParts([]);
+    setShippedDeliveries([...shippedDeliveries, newDelivery]);
   };
 
   const getRemainingQuantity = (delivery: Delivery) => {
@@ -127,41 +131,6 @@ export default function ShipPartsScreen() {
 
             <View style={styles.childPartsSection}>
               <Text style={styles.sectionSubtitle}>Child Parts</Text>
-              <View style={styles.inputRow}>
-                <TextInput
-                  style={[styles.input, styles.inputPartNumber]}
-                  placeholder="Child Part Number"
-                  placeholderTextColor="#999"
-                  value={currentChildPartNumber}
-                  onChangeText={setCurrentChildPartNumber}
-                />
-                <TextInput
-                  style={[styles.input, styles.inputQuantity]}
-                  placeholder="Quantity"
-                  placeholderTextColor="#999"
-                  value={currentChildQuantity}
-                  onChangeText={setCurrentChildQuantity}
-                  keyboardType="numeric"
-                />
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    styles.addButton,
-                    (!currentChildPartNumber ||
-                      !currentChildQuantity ||
-                      !selectedProofOfDelivery) &&
-                      styles.buttonDisabled,
-                  ]}
-                  onPress={handleAddChildPart}
-                  disabled={
-                    !currentChildPartNumber ||
-                    !currentChildQuantity ||
-                    !selectedProofOfDelivery
-                  }
-                >
-                  <Text style={styles.buttonText}>Add</Text>
-                </TouchableOpacity>
-              </View>
 
               <View style={styles.proofOfDeliverySection}>
                 <Text style={styles.proofOfDeliveryLabel}>
@@ -182,7 +151,10 @@ export default function ShipPartsScreen() {
                           selectedProofOfDelivery?.id === delivery.id &&
                             styles.selectedCard,
                         ]}
-                        onPress={() => setSelectedProofOfDelivery(delivery)}
+                        onPress={() => {
+                          setSelectedProofOfDelivery(delivery);
+                          setCurrentChildPartNumber(delivery.part.partNumber);
+                        }}
                         disabled={remaining <= 0}
                       >
                         <Text style={styles.proofOfDeliveryTitle}>
@@ -199,6 +171,49 @@ export default function ShipPartsScreen() {
                   })
                 )}
               </View>
+
+              {selectedProofOfDelivery && (
+                <View style={styles.childPartForm}>
+                  <View style={styles.inputRow}>
+                    <TextInput
+                      style={[styles.input, styles.inputPartNumber]}
+                      placeholder="Part Number"
+                      placeholderTextColor="#999"
+                      value={currentChildPartNumber}
+                      onChangeText={setCurrentChildPartNumber}
+                      editable={false}
+                    />
+                    <TextInput
+                      style={[styles.input, styles.inputQuantity]}
+                      placeholder="Quantity"
+                      placeholderTextColor="#999"
+                      value={currentChildQuantity}
+                      onChangeText={setCurrentChildQuantity}
+                      keyboardType="numeric"
+                    />
+                    <TouchableOpacity
+                      style={[
+                        styles.button,
+                        styles.addButton,
+                        (!currentChildQuantity ||
+                          parseInt(currentChildQuantity) <= 0 ||
+                          parseInt(currentChildQuantity) >
+                            getRemainingQuantity(selectedProofOfDelivery)) &&
+                          styles.buttonDisabled,
+                      ]}
+                      onPress={handleAddChildPart}
+                      disabled={
+                        !currentChildQuantity ||
+                        parseInt(currentChildQuantity) <= 0 ||
+                        parseInt(currentChildQuantity) >
+                          getRemainingQuantity(selectedProofOfDelivery)
+                      }
+                    >
+                      <Text style={styles.buttonText}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
 
               {childParts.length > 0 && (
                 <View style={styles.childPartsList}>
@@ -239,6 +254,47 @@ export default function ShipPartsScreen() {
               <Text style={styles.buttonText}>Ship Parts</Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Shipped Parts</Text>
+          {shippedDeliveries.length === 0 ? (
+            <Text style={styles.emptyText}>No shipped parts yet</Text>
+          ) : (
+            shippedDeliveries.map((delivery) => (
+              <View key={delivery.id} style={styles.shippedPartCard}>
+                <View style={styles.shippedPartHeader}>
+                  <Text style={styles.shippedPartTitle}>
+                    Delivery #{delivery.id}
+                  </Text>
+                  <Text style={styles.shippedPartStatus}>
+                    {delivery.status}
+                  </Text>
+                </View>
+                <Text style={styles.shippedPartText}>
+                  {delivery.part.partNumber} x {delivery.part.quantity}
+                </Text>
+                {delivery.part.childParts &&
+                  delivery.part.childParts.length > 0 && (
+                    <View style={styles.childPartsList}>
+                      <Text style={styles.childPartsTitle}>Child Parts:</Text>
+                      {delivery.part.childParts.map((part, index) => (
+                        <View key={index} style={styles.childPartItem}>
+                          <View style={styles.childPartInfo}>
+                            <Text style={styles.childPartText}>
+                              {part.partNumber} x {part.quantity}
+                            </Text>
+                            <Text style={styles.proofOfDeliveryText}>
+                              From Delivery #{part.proofOfDeliveryId}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
     </View>
@@ -396,5 +452,43 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: 8,
+  },
+  childPartForm: {
+    marginTop: 16,
+  },
+  shippedPartCard: {
+    backgroundColor: '#F8F8F8',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  shippedPartHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  shippedPartTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  shippedPartStatus: {
+    fontSize: 14,
+    color: '#007AFF',
+    textTransform: 'capitalize',
+  },
+  shippedPartText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  childPartsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
   },
 });

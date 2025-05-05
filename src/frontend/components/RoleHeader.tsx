@@ -6,9 +6,14 @@ import { LogOut } from './LogOut';
 type RoleHeaderProps = {
   title: string;
   iconName: React.ComponentProps<typeof FontAwesome>['name'];
+  centerTitle?: boolean;
 };
 
-export const RoleHeader = ({ title, iconName }: RoleHeaderProps) => {
+export const RoleHeader = ({
+  title,
+  iconName,
+  centerTitle = false,
+}: RoleHeaderProps) => {
   return (
     <View style={styles.header}>
       <FontAwesome
@@ -17,7 +22,12 @@ export const RoleHeader = ({ title, iconName }: RoleHeaderProps) => {
         color="#007AFF"
         style={styles.icon}
       />
-      <View style={styles.titleContainer}>
+      <View
+        style={[
+          styles.titleContainer,
+          centerTitle && styles.titleContainerCentered,
+        ]}
+      >
         <Text style={styles.title}>{title}</Text>
       </View>
       <View style={styles.logoutContainer}>
@@ -41,6 +51,8 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
+  },
+  titleContainerCentered: {
     alignItems: 'center',
   },
   title: {
