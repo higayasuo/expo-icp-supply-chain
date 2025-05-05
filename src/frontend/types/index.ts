@@ -8,6 +8,7 @@ export type ChildPart = {
   partNumber: string;
   quantity: number;
   proofOfDeliveryId?: string;
+  status: DeliveryStatus;
 };
 
 export type DeliveryStatus = 'in-transit' | 'received';

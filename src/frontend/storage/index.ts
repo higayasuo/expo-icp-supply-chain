@@ -9,6 +9,7 @@ import {
 } from 'expo-storage-universal-native';
 import { StringValueStorageWrapper } from 'expo-storage-universal';
 import { UpToMiddleDeliveriesStorage } from './UpToMiddleDeliveriesStorage';
+import { MiddleToDownDeliveriesStorage } from './MiddleToDownDeliveriesStorage';
 
 export const secureStorage =
   Platform.OS === 'web' ? new WebSecureStorage() : new NativeSecureStorage();
@@ -22,5 +23,8 @@ export const roleStorage = new StringValueStorageWrapper(
 );
 
 export const upToMiddleDeliveriesStorage = new UpToMiddleDeliveriesStorage(
+  regularStorage,
+);
+export const middleToDownDeliveriesStorage = new MiddleToDownDeliveriesStorage(
   regularStorage,
 );

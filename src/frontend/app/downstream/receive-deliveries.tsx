@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
@@ -11,16 +10,14 @@ import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LogOut } from '@/components/LogOut';
 import { Delivery } from '@/types';
-import { upToMiddleDeliveriesStorage } from '@/storage';
+import { middleToDownDeliveriesStorage } from '@/storage';
 
-export default function DeliveriesScreen() {
-  const [currentPartNumber, setCurrentPartNumber] = useState('');
-  const [currentQuantity, setCurrentQuantity] = useState('');
+export default function ReceiveDeliveriesScreen() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
 
   useEffect(() => {
     const fetchDeliveries = async () => {
-      const deliveries = await upToMiddleDeliveriesStorage.find();
+      const deliveries = await middleToDownDeliveriesStorage.find();
       if (deliveries) {
         setDeliveries(deliveries);
       }
@@ -28,25 +25,19 @@ export default function DeliveriesScreen() {
     fetchDeliveries();
   }, []);
 
-  const handleCreateDelivery = async () => {
-    if (!currentPartNumber || !currentQuantity) return;
+  const handleReceiveDelivery = async (deliveryId: string) => {
+    const delivery = deliveries.find((d) => d.id === deliveryId);
+    if (!delivery) return;
 
-    const newDelivery: Delivery = {
-      id: Date.now().toString(),
-      part: {
-        partNumber: currentPartNumber,
-        quantity: parseInt(currentQuantity),
-      },
-      status: 'in-transit',
-      from: 'upstream',
-      to: 'middlestream',
-      timestamp: new Date().toISOString(),
+    const updatedDelivery = {
+      ...delivery,
+      status: 'received' as const,
     };
 
-    await upToMiddleDeliveriesStorage.addDelivery(newDelivery);
-    setDeliveries([newDelivery, ...deliveries]);
-    setCurrentPartNumber('');
-    setCurrentQuantity('');
+    await middleToDownDeliveriesStorage.updateDelivery(updatedDelivery);
+    setDeliveries(
+      deliveries.map((d) => (d.id === deliveryId ? updatedDelivery : d)),
+    );
   };
 
   const getStatusColor = (status: Delivery['status']) => {
@@ -65,12 +56,12 @@ export default function DeliveriesScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.replace('/upstream')}
+          onPress={() => router.replace('/downstream')}
         >
           <FontAwesome name="arrow-left" size={24} color="#007AFF" />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Ship Parts</Text>
+          <Text style={styles.headerTitle}>Receive Deliveries</Text>
         </View>
         <View style={styles.logoutContainer}>
           <LogOut />
@@ -78,43 +69,9 @@ export default function DeliveriesScreen() {
       </View>
       <ScrollView style={styles.content}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ship Parts</Text>
-          <View style={styles.form}>
-            <View style={styles.inputRow}>
-              <TextInput
-                style={[styles.input, styles.inputPartNumber]}
-                placeholder="Part Number"
-                placeholderTextColor="#999"
-                value={currentPartNumber}
-                onChangeText={setCurrentPartNumber}
-              />
-              <TextInput
-                style={[styles.input, styles.inputQuantity]}
-                placeholder="Quantity"
-                placeholderTextColor="#999"
-                value={currentQuantity}
-                onChangeText={setCurrentQuantity}
-                keyboardType="numeric"
-              />
-            </View>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                (!currentPartNumber || !currentQuantity) &&
-                  styles.buttonDisabled,
-              ]}
-              onPress={handleCreateDelivery}
-              disabled={!currentPartNumber || !currentQuantity}
-            >
-              <Text style={styles.buttonText}>Ship Parts</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Shipments</Text>
+          <Text style={styles.sectionTitle}>Incoming Deliveries</Text>
           {deliveries.length === 0 ? (
-            <Text style={styles.emptyText}>No deliveries yet</Text>
+            <Text style={styles.emptyText}>No deliveries available</Text>
           ) : (
             deliveries.map((delivery) => (
               <View key={delivery.id} style={styles.deliveryCard}>
@@ -152,9 +109,49 @@ export default function DeliveriesScreen() {
                 <Text style={styles.deliveryInfo}>
                   From: {delivery.from} → To: {delivery.to}
                 </Text>
-                <Text style={styles.deliveryInfo}>
-                  Created: {new Date(delivery.timestamp).toLocaleString()}
-                </Text>
+                {delivery.part.childParts &&
+                  delivery.part.childParts.length > 0 && (
+                    <View style={styles.childPartsList}>
+                      <Text style={styles.childPartsTitle}>Child Parts:</Text>
+                      {delivery.part.childParts.map((part, index) => (
+                        <View key={index} style={styles.childPartItem}>
+                          <View style={styles.childPartInfo}>
+                            <View style={styles.childPartHeader}>
+                              <Text style={styles.childPartText}>
+                                {part.partNumber} x {part.quantity}
+                              </Text>
+                              <View style={styles.headerRight}>
+                                <View style={styles.verifiedContainer}>
+                                  <FontAwesome
+                                    name="certificate"
+                                    size={14}
+                                    color="#007AFF"
+                                    style={styles.verifiedIcon}
+                                  />
+                                  <Text style={styles.verifiedText}>
+                                    Verified
+                                  </Text>
+                                </View>
+                              </View>
+                            </View>
+                            <Text style={styles.proofOfDeliveryText}>
+                              From Delivery #{part.proofOfDeliveryId}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                {delivery.status === 'in-transit' && (
+                  <TouchableOpacity
+                    style={styles.receiveButton}
+                    onPress={() => handleReceiveDelivery(delivery.id)}
+                  >
+                    <Text style={styles.receiveButtonText}>
+                      Mark as Received
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))
           )}
@@ -182,40 +179,6 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 16,
   },
-  form: {
-    gap: 12,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  inputPartNumber: {
-    flex: 2,
-  },
-  inputQuantity: {
-    flex: 1,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: '#E5E5E5',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   deliveryCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -238,19 +201,6 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  verifiedContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  verifiedIcon: {
-    marginRight: 4,
-  },
-  verifiedText: {
-    fontSize: 12,
-    color: '#007AFF',
-    fontWeight: '600',
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -278,6 +228,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 8,
+  },
+  childPartsList: {
+    marginTop: 12,
+  },
+  childPartsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  childPartItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8F8F8',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  childPartInfo: {
+    flex: 1,
+  },
+  childPartText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  proofOfDeliveryText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  receiveButton: {
+    backgroundColor: '#34C759',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  receiveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   emptyText: {
     color: '#666',
@@ -308,5 +300,23 @@ const styles = StyleSheet.create({
   },
   logoutContainer: {
     marginLeft: 'auto',
+  },
+  verifiedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  verifiedIcon: {
+    marginRight: 4,
+  },
+  verifiedText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  childPartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });

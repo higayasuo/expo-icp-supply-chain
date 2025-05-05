@@ -11,7 +11,10 @@ import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LogOut } from '@/components/LogOut';
 import { Delivery, Part, ChildPart } from '@/types';
-import { upToMiddleDeliveriesStorage } from '@/storage';
+import {
+  upToMiddleDeliveriesStorage,
+  middleToDownDeliveriesStorage,
+} from '@/storage';
 
 export default function ShipPartsScreen() {
   const [currentPartNumber, setCurrentPartNumber] = useState('');
@@ -26,11 +29,14 @@ export default function ShipPartsScreen() {
 
   useEffect(() => {
     const fetchDeliveries = async () => {
-      const deliveries = await upToMiddleDeliveriesStorage.find();
-      if (deliveries) {
-        const received = deliveries.filter((d) => d.status === 'received');
-        const shipped = deliveries.filter((d) => d.status === 'in-transit');
+      const received = await upToMiddleDeliveriesStorage.getDeliveriesByStatus(
+        'received',
+      );
+      if (received) {
         setReceivedDeliveries(received);
+      }
+      const shipped = await middleToDownDeliveriesStorage.find();
+      if (shipped) {
         setShippedDeliveries(shipped);
       }
     };
@@ -49,6 +55,7 @@ export default function ShipPartsScreen() {
       partNumber: currentChildPartNumber,
       quantity: parseInt(currentChildQuantity),
       proofOfDeliveryId: selectedProofOfDelivery.id,
+      status: 'received',
     };
 
     setChildParts([...childParts, newChildPart]);
@@ -77,7 +84,7 @@ export default function ShipPartsScreen() {
       timestamp: new Date().toISOString(),
     };
 
-    await upToMiddleDeliveriesStorage.addDelivery(newDelivery);
+    await middleToDownDeliveriesStorage.addDelivery(newDelivery);
     setCurrentPartNumber('');
     setCurrentQuantity('');
     setChildParts([]);
@@ -157,9 +164,22 @@ export default function ShipPartsScreen() {
                         }}
                         disabled={remaining <= 0}
                       >
-                        <Text style={styles.proofOfDeliveryTitle}>
-                          Delivery #{delivery.id}
-                        </Text>
+                        <View style={styles.proofOfDeliveryHeader}>
+                          <Text style={styles.proofOfDeliveryTitle}>
+                            Delivery #{delivery.id}
+                          </Text>
+                          <View style={styles.headerRight}>
+                            <View style={styles.verifiedContainer}>
+                              <FontAwesome
+                                name="certificate"
+                                size={14}
+                                color="#007AFF"
+                                style={styles.verifiedIcon}
+                              />
+                              <Text style={styles.verifiedText}>Verified</Text>
+                            </View>
+                          </View>
+                        </View>
                         <Text style={styles.proofOfDeliveryText}>
                           {delivery.part.partNumber} x {delivery.part.quantity}
                         </Text>
@@ -220,9 +240,22 @@ export default function ShipPartsScreen() {
                   {childParts.map((part, index) => (
                     <View key={index} style={styles.childPartItem}>
                       <View style={styles.childPartInfo}>
-                        <Text style={styles.childPartText}>
-                          {part.partNumber} x {part.quantity}
-                        </Text>
+                        <View style={styles.childPartHeader}>
+                          <Text style={styles.childPartText}>
+                            {part.partNumber} x {part.quantity}
+                          </Text>
+                          <View style={styles.headerRight}>
+                            <View style={styles.verifiedContainer}>
+                              <FontAwesome
+                                name="certificate"
+                                size={14}
+                                color="#007AFF"
+                                style={styles.verifiedIcon}
+                              />
+                              <Text style={styles.verifiedText}>Verified</Text>
+                            </View>
+                          </View>
+                        </View>
                         <Text style={styles.proofOfDeliveryText}>
                           From Delivery #{part.proofOfDeliveryId}
                         </Text>
@@ -267,12 +300,26 @@ export default function ShipPartsScreen() {
                   <Text style={styles.shippedPartTitle}>
                     Delivery #{delivery.id}
                   </Text>
-                  <Text style={styles.shippedPartStatus}>
-                    {delivery.status}
-                  </Text>
+                  <View style={styles.headerRight}>
+                    <View style={styles.verifiedContainer}>
+                      <FontAwesome
+                        name="certificate"
+                        size={16}
+                        color="#007AFF"
+                        style={styles.verifiedIcon}
+                      />
+                      <Text style={styles.verifiedText}>Verified</Text>
+                    </View>
+                    <Text style={styles.shippedPartStatus}>
+                      {delivery.status.toUpperCase()}
+                    </Text>
+                  </View>
                 </View>
                 <Text style={styles.shippedPartText}>
                   {delivery.part.partNumber} x {delivery.part.quantity}
+                </Text>
+                <Text style={styles.shippedPartRoute}>
+                  From: {delivery.from} → To: {delivery.to}
                 </Text>
                 {delivery.part.childParts &&
                   delivery.part.childParts.length > 0 && (
@@ -281,9 +328,24 @@ export default function ShipPartsScreen() {
                       {delivery.part.childParts.map((part, index) => (
                         <View key={index} style={styles.childPartItem}>
                           <View style={styles.childPartInfo}>
-                            <Text style={styles.childPartText}>
-                              {part.partNumber} x {part.quantity}
-                            </Text>
+                            <View style={styles.childPartHeader}>
+                              <Text style={styles.childPartText}>
+                                {part.partNumber} x {part.quantity}
+                              </Text>
+                              <View style={styles.headerRight}>
+                                <View style={styles.verifiedContainer}>
+                                  <FontAwesome
+                                    name="certificate"
+                                    size={14}
+                                    color="#007AFF"
+                                    style={styles.verifiedIcon}
+                                  />
+                                  <Text style={styles.verifiedText}>
+                                    Verified
+                                  </Text>
+                                </View>
+                              </View>
+                            </View>
                             <Text style={styles.proofOfDeliveryText}>
                               From Delivery #{part.proofOfDeliveryId}
                             </Text>
@@ -432,11 +494,16 @@ const styles = StyleSheet.create({
     borderColor: '#007AFF',
     backgroundColor: '#F0F7FF',
   },
+  proofOfDeliveryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   proofOfDeliveryTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 4,
   },
   proofOfDeliveryText: {
     fontSize: 14,
@@ -483,12 +550,40 @@ const styles = StyleSheet.create({
   shippedPartText: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 4,
+  },
+  shippedPartRoute: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 8,
+    fontStyle: 'italic',
   },
   childPartsTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  verifiedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  verifiedIcon: {
+    marginRight: 4,
+  },
+  verifiedText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  childPartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });
