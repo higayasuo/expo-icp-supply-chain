@@ -12,11 +12,13 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LogOut } from '@/components/LogOut';
 import { Delivery } from '@/types';
 import { upToMiddleDeliveriesStorage } from '@/storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function DeliveriesScreen() {
   const [currentPartNumber, setCurrentPartNumber] = useState('');
   const [currentQuantity, setCurrentQuantity] = useState('');
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchDeliveries = async () => {
@@ -62,7 +64,7 @@ export default function DeliveriesScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 24 }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.replace('/upstream')}
@@ -220,7 +222,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E5E5E5',
   },
@@ -228,21 +230,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   deliveryTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
+    flex: 1,
+    minWidth: '50%',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   verifiedContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
+    backgroundColor: '#F8F8F8',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    flexShrink: 1,
   },
   verifiedIcon: {
     marginRight: 4,
@@ -251,11 +264,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#007AFF',
     fontWeight: '600',
+    flexShrink: 1,
   },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
+    flexShrink: 1,
   },
   statusText: {
     color: '#fff',
@@ -269,15 +284,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8',
     padding: 12,
     borderRadius: 8,
+    marginBottom: 12,
   },
   partText: {
     fontSize: 16,
     color: '#333',
+    lineHeight: 24,
   },
   deliveryInfo: {
     fontSize: 14,
     color: '#666',
-    marginTop: 8,
+    marginBottom: 8,
+    lineHeight: 20,
   },
   emptyText: {
     color: '#666',
@@ -289,21 +307,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8F8F8',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
   backButton: {
-    padding: 8,
-    marginRight: 8,
+    marginRight: 12,
   },
   headerTitleContainer: {
     flex: 1,
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#333',
   },
   logoutContainer: {

@@ -10,11 +10,25 @@ import {
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LogOut } from '@/components/LogOut';
+import { RoleHeader } from '@/components/RoleHeader';
 import { Delivery, Part, ChildPart } from '@/types';
 import {
   upToMiddleDeliveriesStorage,
   middleToDownDeliveriesStorage,
 } from '@/storage';
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'in-transit':
+      return '#007AFF';
+    case 'delivered':
+      return '#34C759';
+    case 'cancelled':
+      return '#FF3B30';
+    default:
+      return '#8E8E93';
+  }
+};
 
 export default function ShipPartsScreen() {
   const [currentPartNumber, setCurrentPartNumber] = useState('');
@@ -100,20 +114,12 @@ export default function ShipPartsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.replace('/middlestream')}
-        >
-          <FontAwesome name="arrow-left" size={24} color="#007AFF" />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Ship Parts</Text>
-        </View>
-        <View style={styles.logoutContainer}>
-          <LogOut />
-        </View>
-      </View>
+      <RoleHeader
+        title="Ship Parts"
+        iconName="truck"
+        onBack={() => router.replace('/middlestream')}
+        centerTitle
+      />
       <ScrollView style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Create New Delivery</Text>
@@ -295,9 +301,9 @@ export default function ShipPartsScreen() {
             <Text style={styles.emptyText}>No shipped parts yet</Text>
           ) : (
             shippedDeliveries.map((delivery) => (
-              <View key={delivery.id} style={styles.shippedPartCard}>
-                <View style={styles.shippedPartHeader}>
-                  <Text style={styles.shippedPartTitle}>
+              <View key={delivery.id} style={styles.deliveryCard}>
+                <View style={styles.deliveryHeader}>
+                  <Text style={styles.deliveryTitle}>
                     Delivery #{delivery.id}
                   </Text>
                   <View style={styles.headerRight}>
@@ -310,17 +316,23 @@ export default function ShipPartsScreen() {
                       />
                       <Text style={styles.verifiedText}>Verified</Text>
                     </View>
-                    <Text style={styles.shippedPartStatus}>
-                      {delivery.status.toUpperCase()}
-                    </Text>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        { backgroundColor: getStatusColor(delivery.status) },
+                      ]}
+                    >
+                      <Text style={styles.statusText}>
+                        {delivery.status.toUpperCase()}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-                <Text style={styles.shippedPartText}>
-                  {delivery.part.partNumber} x {delivery.part.quantity}
-                </Text>
-                <Text style={styles.shippedPartRoute}>
-                  From: {delivery.from} → To: {delivery.to}
-                </Text>
+                <View style={styles.partItem}>
+                  <Text style={styles.partText}>
+                    {delivery.part.partNumber} x {delivery.part.quantity}
+                  </Text>
+                </View>
                 {delivery.part.childParts &&
                   delivery.part.childParts.length > 0 && (
                     <View style={styles.childPartsList}>
@@ -354,6 +366,12 @@ export default function ShipPartsScreen() {
                       ))}
                     </View>
                   )}
+                <Text style={styles.deliveryInfo}>
+                  From: {delivery.from} → To: {delivery.to}
+                </Text>
+                <Text style={styles.deliveryInfo}>
+                  Created: {new Date(delivery.timestamp).toLocaleString()}
+                </Text>
               </View>
             ))
           )}
@@ -523,55 +541,44 @@ const styles = StyleSheet.create({
   childPartForm: {
     marginTop: 16,
   },
-  shippedPartCard: {
-    backgroundColor: '#F8F8F8',
+  deliveryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E5E5E5',
   },
-  shippedPartHeader: {
+  deliveryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  shippedPartTitle: {
-    fontSize: 16,
+  deliveryTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: '#333',
-  },
-  shippedPartStatus: {
-    fontSize: 14,
-    color: '#007AFF',
-    textTransform: 'capitalize',
-  },
-  shippedPartText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  shippedPartRoute: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-    fontStyle: 'italic',
-  },
-  childPartsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    flex: 1,
+    minWidth: '50%',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   verifiedContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
+    backgroundColor: '#F8F8F8',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    flexShrink: 1,
   },
   verifiedIcon: {
     marginRight: 4,
@@ -580,6 +587,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#007AFF',
     fontWeight: '600',
+    flexShrink: 1,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    flexShrink: 1,
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  partItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8F8F8',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  partText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+  },
+  deliveryInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  childPartsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
   },
   childPartHeader: {
     flexDirection: 'row',

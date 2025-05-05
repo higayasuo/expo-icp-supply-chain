@@ -7,11 +7,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 export default function DownstreamScreen() {
   return (
     <View style={styles.container}>
-      <RoleHeader
-        title="Downstream Operations"
-        iconName="shopping-cart"
-        centerTitle
-      />
+      <RoleHeader title="Downstream" iconName="shopping-cart" centerTitle />
       <View style={styles.content}>
         <Text style={styles.description}>
           Manage your retail and distribution operations

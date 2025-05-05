@@ -7,11 +7,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 export default function MiddlestreamScreen() {
   return (
     <View style={styles.container}>
-      <RoleHeader
-        title="Middlestream Operations"
-        iconName="truck"
-        centerTitle
-      />
+      <RoleHeader title="Middlestream" iconName="truck" centerTitle />
       <View style={styles.content}>
         <Text style={styles.description}>
           Manage your logistics and distribution processes

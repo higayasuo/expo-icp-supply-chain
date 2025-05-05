@@ -20,8 +20,7 @@ import { secureStorage, regularStorage } from '@/storage';
 import React from 'react';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: 'login',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -79,10 +78,9 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (isAuthReady && !isAuthenticated) {
-      console.log('isAuthenticated', isAuthenticated);
       router.replace('/login');
     }
-  }, [isAuthReady, isAuthenticated]);
+  }, [isAuthReady, isAuthenticated, router]);
 
   if (!isAuthReady) {
     return <LoadingView />;

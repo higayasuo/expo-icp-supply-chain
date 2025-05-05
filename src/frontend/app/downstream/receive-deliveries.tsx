@@ -9,6 +9,7 @@ import {
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LogOut } from '@/components/LogOut';
+import { RoleHeader } from '@/components/RoleHeader';
 import { Delivery } from '@/types';
 import { middleToDownDeliveriesStorage } from '@/storage';
 
@@ -53,20 +54,12 @@ export default function ReceiveDeliveriesScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.replace('/downstream')}
-        >
-          <FontAwesome name="arrow-left" size={24} color="#007AFF" />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Receive Deliveries</Text>
-        </View>
-        <View style={styles.logoutContainer}>
-          <LogOut />
-        </View>
-      </View>
+      <RoleHeader
+        title="Receive Deliveries"
+        iconName="truck"
+        onBack={() => router.replace('/downstream')}
+        centerTitle
+      />
       <ScrollView style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Incoming Deliveries</Text>
@@ -192,20 +185,46 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   deliveryTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
+    flex: 1,
+    minWidth: '50%',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+    flexWrap: 'wrap',
+  },
+  verifiedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F8F8',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    flexShrink: 1,
+  },
+  verifiedIcon: {
+    marginRight: 4,
+  },
+  verifiedText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '600',
+    flexShrink: 1,
   },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
+    flexShrink: 1,
   },
   statusText: {
     color: '#fff',
@@ -276,43 +295,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  backButton: {
-    padding: 8,
-    marginRight: 8,
-  },
-  headerTitleContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-  },
-  logoutContainer: {
-    marginLeft: 'auto',
-  },
-  verifiedContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  verifiedIcon: {
-    marginRight: 4,
-  },
-  verifiedText: {
-    fontSize: 12,
-    color: '#007AFF',
-    fontWeight: '600',
   },
   childPartHeader: {
     flexDirection: 'row',

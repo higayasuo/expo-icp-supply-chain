@@ -7,7 +7,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 export default function UpstreamScreen() {
   return (
     <View style={styles.container}>
-      <RoleHeader title="Upstream Operations" iconName="industry" centerTitle />
+      <RoleHeader title="Upstream" iconName="industry" centerTitle />
       <View style={styles.content}>
         <Text style={styles.description}>
           Manage your production and manufacturing processes
