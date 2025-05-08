@@ -8,8 +8,8 @@ import {
   NativeRegularStorage,
 } from 'expo-storage-universal-native';
 import { StringValueStorageWrapper } from 'expo-storage-universal';
-import { UpToMiddleDeliveriesStorage } from './UpToMiddleDeliveriesStorage';
 import { MiddleToDownDeliveriesStorage } from './MiddleToDownDeliveriesStorage';
+import { UpToMiddleDeliveriesStorage } from './UpToMiddleDeliveriesStorage';
 
 export const secureStorage =
   Platform.OS === 'web' ? new WebSecureStorage() : new NativeSecureStorage();

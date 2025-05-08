@@ -1,8 +1,8 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Slot, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import 'react-native-reanimated';
 import { useIIIntegration, IIIntegrationProvider } from 'expo-ii-integration';
 import { ErrorProvider } from '@/contexts/ErrorContext';
@@ -16,10 +16,10 @@ import {
   CANISTER_ID_II_INTEGRATION,
   CANISTER_ID_FRONTEND,
 } from '@/constants';
-import { secureStorage, regularStorage } from '@/storage';
-import React from 'react';
-
+import { secureStorage, regularStorage, roleStorage } from '@/storage';
+import { cryptoModule } from '@/crypto';
 export const unstable_settings = {
+  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: 'login',
 };
 
@@ -55,7 +55,6 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const deepLink = Linking.createURL('/');
-  const router = useRouter();
   const iiIntegration = useIIIntegration({
     localIPAddress: LOCAL_IP_ADDRESS,
     dfxNetwork: DFX_NETWORK,
@@ -65,7 +64,10 @@ function RootLayoutNav() {
     iiIntegrationCanisterId: CANISTER_ID_II_INTEGRATION,
     secureStorage,
     regularStorage,
+    cryptoModule,
   });
+
+  const router = useRouter();
 
   const { authError, isAuthReady, isAuthenticated } = iiIntegration;
   const { showError } = useError();
@@ -77,20 +79,53 @@ function RootLayoutNav() {
   }, [authError, showError]);
 
   useEffect(() => {
-    if (isAuthReady && !isAuthenticated) {
-      router.replace('/login');
+    if (isAuthReady) {
+      if (isAuthenticated) {
+        const moveTo = async () => {
+          const role = await roleStorage.find();
+          if (role === 'upstream') {
+            router.replace('/upstream');
+          } else if (role === 'middlestream') {
+            router.replace('/middlestream');
+          } else if (role === 'downstream') {
+            router.replace('/downstream');
+          } else {
+            router.replace('/login');
+          }
+        };
+        moveTo();
+      } else {
+        router.replace('/login');
+      }
     }
-  }, [isAuthReady, isAuthenticated, router]);
+  }, [isAuthReady, router, isAuthenticated]);
+
+  // Memoize the main content view to prevent recreation on each render
+  const mainContentView = useMemo(
+    () => (
+      <IIIntegrationProvider value={iiIntegration}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+          initialRouteName="login"
+        >
+          <Stack.Screen name="login" />
+          <Stack.Screen name="upstream/index" />
+          <Stack.Screen name="middlestream/index" />
+          <Stack.Screen name="downstream/index" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </IIIntegrationProvider>
+    ),
+    [iiIntegration],
+  );
 
   if (!isAuthReady) {
     return <LoadingView />;
   }
 
-  return (
-    <IIIntegrationProvider value={iiIntegration}>
-      <Slot />
-    </IIIntegrationProvider>
-  );
+  return mainContentView;
 }
 
 const LoadingView = () => {

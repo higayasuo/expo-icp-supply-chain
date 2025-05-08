@@ -16,7 +16,7 @@ import {
 
 const main = async (): Promise<void> => {
   try {
-    const { deepLink, appPublicKey, iiUri } = buildParams({
+    const { deepLink, appPublicKey, iiUri, sessionId } = buildParams({
       localIPAddress: LOCAL_IP_ADDRESS,
       dfxNetwork: DFX_NETWORK,
       internetIdentityCanisterId: CANISTER_ID_INTERNET_IDENTITY,
@@ -25,7 +25,7 @@ const main = async (): Promise<void> => {
     });
     console.log('deepLink', deepLink);
     console.log('iiUri', iiUri);
-
+    console.log('sessionId', sessionId);
     const { iiLoginButton, backToAppButton } = prepareButtons();
 
     // Set up the login button handler
@@ -33,6 +33,7 @@ const main = async (): Promise<void> => {
       iiLoginButton,
       backToAppButton,
       deepLink,
+      sessionId,
       appPublicKey,
       iiUri,
       ttlMs: 1000 * 60 * 15, // 15 minutes

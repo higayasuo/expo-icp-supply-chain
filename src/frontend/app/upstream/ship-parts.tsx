@@ -9,16 +9,14 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { LogOut } from '@/components/LogOut';
+import { RoleHeader } from '@/components/RoleHeader';
 import { Delivery } from '@/types';
 import { upToMiddleDeliveriesStorage } from '@/storage';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function DeliveriesScreen() {
   const [currentPartNumber, setCurrentPartNumber] = useState('');
   const [currentQuantity, setCurrentQuantity] = useState('');
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
-  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchDeliveries = async () => {
@@ -64,20 +62,12 @@ export default function DeliveriesScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 24 }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.replace('/upstream')}
-        >
-          <FontAwesome name="arrow-left" size={24} color="#007AFF" />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Ship Parts</Text>
-        </View>
-        <View style={styles.logoutContainer}>
-          <LogOut />
-        </View>
-      </View>
+      <RoleHeader
+        title="Ship Parts"
+        iconName="truck"
+        onBack={() => router.replace('/upstream')}
+        centerTitle
+      />
       <ScrollView style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ship Parts</Text>
@@ -302,28 +292,5 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#F8F8F8',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-  },
-  backButton: {
-    marginRight: 12,
-  },
-  headerTitleContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#333',
-  },
-  logoutContainer: {
-    marginLeft: 'auto',
   },
 });

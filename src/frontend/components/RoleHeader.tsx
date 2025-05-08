@@ -20,7 +20,7 @@ export const RoleHeader = ({
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
+    <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
       {onBack ? (
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
           <FontAwesome name="arrow-left" size={24} color="#007AFF" />
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
     backgroundColor: '#F8F8F8',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',

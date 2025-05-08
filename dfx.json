@@ -30,7 +30,7 @@
         "src/frontend/dist"
       ],
       "type": "assets",
-      "build": "npm run build --prefix src/frontend"
+      "build": "npm run frontend:build"
     }
   },
   "defaults": {

@@ -9,9 +9,8 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { LogOut } from '@/components/LogOut';
 import { RoleHeader } from '@/components/RoleHeader';
-import { Delivery, Part, ChildPart } from '@/types';
+import { Delivery, ChildPart } from '@/types';
 import {
   upToMiddleDeliveriesStorage,
   middleToDownDeliveriesStorage,
@@ -21,12 +20,10 @@ const getStatusColor = (status: string) => {
   switch (status) {
     case 'in-transit':
       return '#007AFF';
-    case 'delivered':
+    case 'received':
       return '#34C759';
-    case 'cancelled':
-      return '#FF3B30';
     default:
-      return '#8E8E93';
+      return '#666';
   }
 };
 
