@@ -11,6 +11,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { RoleHeader } from '@/components/RoleHeader';
 import { Delivery } from '@/types';
 import { middleToDownDeliveriesStorage } from '@/storage';
+import { compareDeliveriesById } from '@/storage/DeliveriesStorage';
 
 export default function ReceiveDeliveriesScreen() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -34,7 +35,10 @@ export default function ReceiveDeliveriesScreen() {
       status: 'received' as const,
     };
 
-    await middleToDownDeliveriesStorage.updateDelivery(updatedDelivery);
+    await middleToDownDeliveriesStorage.updateItem(
+      updatedDelivery,
+      compareDeliveriesById,
+    );
     setDeliveries(
       deliveries.map((d) => (d.id === deliveryId ? updatedDelivery : d)),
     );

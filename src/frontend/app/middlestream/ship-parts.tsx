@@ -15,6 +15,7 @@ import {
   upToMiddleDeliveriesStorage,
   middleToDownDeliveriesStorage,
 } from '@/storage';
+import { filterDeliveriesByStatus } from '@/storage/DeliveriesStorage';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -26,6 +27,8 @@ const getStatusColor = (status: string) => {
       return '#666';
   }
 };
+
+const filterByStatusReceived = filterDeliveriesByStatus('received');
 
 export default function ShipPartsScreen() {
   const [currentPartNumber, setCurrentPartNumber] = useState('');
@@ -40,8 +43,8 @@ export default function ShipPartsScreen() {
 
   useEffect(() => {
     const fetchDeliveries = async () => {
-      const received = await upToMiddleDeliveriesStorage.getDeliveriesByStatus(
-        'received',
+      const received = await upToMiddleDeliveriesStorage.getItemsByFilter(
+        filterByStatusReceived,
       );
       if (received) {
         setReceivedDeliveries(received);
@@ -95,7 +98,7 @@ export default function ShipPartsScreen() {
       timestamp: new Date().toISOString(),
     };
 
-    await middleToDownDeliveriesStorage.addDelivery(newDelivery);
+    await middleToDownDeliveriesStorage.addItem(newDelivery);
     setCurrentPartNumber('');
     setCurrentQuantity('');
     setChildParts([]);

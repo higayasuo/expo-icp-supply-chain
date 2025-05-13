@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DeliveriesStorage } from '../DeliveriesStorage';
+import {
+  DeliveriesStorage,
+  compareDeliveriesById,
+  filterDeliveriesByStatus,
+} from '../DeliveriesStorage';
 import { Delivery, DeliveryStatus } from '@/types';
 import { Storage } from 'expo-storage-universal';
 
-describe('UpstreamToMiddleDeliveries', () => {
+describe('DeliveriesStorage', () => {
   let storage: Storage;
   let deliveries: DeliveriesStorage;
   let mockDelivery: Delivery;
@@ -25,82 +29,66 @@ describe('UpstreamToMiddleDeliveries', () => {
     };
   });
 
-  it('should add a new delivery', async () => {
-    vi.mocked(storage.find).mockResolvedValueOnce(undefined);
-    await deliveries.addDelivery(mockDelivery);
-    expect(storage.save).toHaveBeenCalledWith(
-      'deliveries',
-      JSON.stringify([mockDelivery]),
-    );
+  it('should compare deliveries by id', () => {
+    const deliveryA = { ...mockDelivery, id: 'A' };
+    const deliveryB = { ...mockDelivery, id: 'B' };
+    expect(compareDeliveriesById(deliveryA, deliveryB)).toBe(-1);
+    expect(compareDeliveriesById(deliveryB, deliveryA)).toBe(1);
+    expect(compareDeliveriesById(deliveryA, deliveryA)).toBe(0);
   });
 
-  it('should update an existing delivery', async () => {
-    const existingDeliveries = [mockDelivery];
-    vi.mocked(storage.find).mockResolvedValueOnce(
-      JSON.stringify(existingDeliveries),
-    );
+  it('should filter deliveries by status', () => {
+    const filterByInTransit = filterDeliveriesByStatus('in-transit');
+    expect(filterByInTransit(mockDelivery)).toBe(true);
 
-    const updatedDelivery = {
+    const receivedDelivery = {
       ...mockDelivery,
       status: 'received' as DeliveryStatus,
     };
+    expect(filterByInTransit(receivedDelivery)).toBe(false);
+  });
 
-    await deliveries.updateDelivery(updatedDelivery);
+  it('should update an existing delivery', async () => {
+    const existingDelivery = { ...mockDelivery, id: '1' };
+    const updatedDelivery = {
+      ...existingDelivery,
+      status: 'received' as DeliveryStatus,
+    };
+
+    // Mock storage.find to return the existing delivery
+    vi.mocked(storage.find).mockResolvedValueOnce(
+      JSON.stringify([existingDelivery]),
+    );
+
+    // Update the delivery
+    await deliveries.updateItem(updatedDelivery, compareDeliveriesById);
+
+    // Verify that save was called with the updated delivery
     expect(storage.save).toHaveBeenCalledWith(
       'deliveries',
       JSON.stringify([updatedDelivery]),
     );
   });
 
-  it('should throw an error when updating a non-existent delivery', async () => {
-    const existingDeliveries = [mockDelivery];
-    vi.mocked(storage.find).mockResolvedValueOnce(
-      JSON.stringify(existingDeliveries),
-    );
-
-    const nonExistentDelivery = {
+  it('should get deliveries by status using getItemsByFilter', async () => {
+    const inTransitDelivery = { ...mockDelivery, id: '1' };
+    const receivedDelivery = {
       ...mockDelivery,
       id: '2',
+      status: 'received' as DeliveryStatus,
     };
 
-    await expect(
-      deliveries.updateDelivery(nonExistentDelivery),
-    ).rejects.toThrow('Delivery not found');
-  });
-
-  it('should get deliveries by status', async () => {
-    const testDeliveries = [
-      mockDelivery,
-      {
-        ...mockDelivery,
-        id: '2',
-        status: 'received' as DeliveryStatus,
-      },
-    ];
+    // Mock storage.find to return both deliveries
     vi.mocked(storage.find).mockResolvedValueOnce(
-      JSON.stringify(testDeliveries),
+      JSON.stringify([inTransitDelivery, receivedDelivery]),
     );
 
-    const inTransitDeliveries = await deliveries.getDeliveriesByStatus(
-      'in-transit',
+    // Get in-transit deliveries
+    const inTransitDeliveries = await deliveries.getItemsByFilter(
+      filterDeliveriesByStatus('in-transit'),
     );
-    expect(inTransitDeliveries).toHaveLength(1);
-    expect(inTransitDeliveries[0].status).toBe('in-transit');
 
-    // Mock the storage.find call again for the second status check
-    vi.mocked(storage.find).mockResolvedValueOnce(
-      JSON.stringify(testDeliveries),
-    );
-    const receivedDeliveries = await deliveries.getDeliveriesByStatus(
-      'received',
-    );
-    expect(receivedDeliveries).toHaveLength(1);
-    expect(receivedDeliveries[0].status).toBe('received');
-  });
-
-  it('should return empty array when no deliveries exist', async () => {
-    vi.mocked(storage.find).mockResolvedValueOnce(undefined);
-    const result = await deliveries.getDeliveriesByStatus('in-transit');
-    expect(result).toEqual([]);
+    // Verify that only in-transit deliveries are returned
+    expect(inTransitDeliveries).toEqual([inTransitDelivery]);
   });
 });

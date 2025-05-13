@@ -23,9 +23,7 @@ const main = async (): Promise<void> => {
       frontendCanisterId: CANISTER_ID_FRONTEND,
       expoScheme: EXPO_SCHEME,
     });
-    console.log('deepLink', deepLink);
-    console.log('iiUri', iiUri);
-    console.log('sessionId', sessionId);
+
     const { iiLoginButton, backToAppButton } = prepareButtons();
 
     // Set up the login button handler

@@ -43,7 +43,7 @@ export default function DeliveriesScreen() {
       timestamp: new Date().toISOString(),
     };
 
-    await upToMiddleDeliveriesStorage.addDelivery(newDelivery);
+    await upToMiddleDeliveriesStorage.addItem(newDelivery);
     setDeliveries([newDelivery, ...deliveries]);
     setCurrentPartNumber('');
     setCurrentQuantity('');
