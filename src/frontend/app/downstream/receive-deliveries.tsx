@@ -35,10 +35,7 @@ export default function ReceiveDeliveriesScreen() {
       status: 'received' as const,
     };
 
-    await middleToDownDeliveriesStorage.updateItem(
-      updatedDelivery,
-      compareDeliveriesById,
-    );
+    await middleToDownDeliveriesStorage.updateItem(updatedDelivery);
     setDeliveries(
       deliveries.map((d) => (d.id === deliveryId ? updatedDelivery : d)),
     );

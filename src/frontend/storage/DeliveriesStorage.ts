@@ -21,6 +21,6 @@ export const filterDeliveriesByStatus =
 
 export class DeliveriesStorage extends JsonValuesStorageWrapper<Delivery> {
   constructor(storage: Storage, key: string) {
-    super(storage, key);
+    super(storage, key, compareDeliveriesById);
   }
 }

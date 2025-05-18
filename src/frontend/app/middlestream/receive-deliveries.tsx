@@ -11,12 +11,10 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { RoleHeader } from '@/components/RoleHeader';
 import { Delivery } from '@/types';
 import { upToMiddleDeliveriesStorage } from '@/storage';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { compareDeliveriesById } from '@/storage/DeliveriesStorage';
 
 export default function ReceiveDeliveriesScreen() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
-  //const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchDeliveries = async () => {
@@ -33,10 +31,7 @@ export default function ReceiveDeliveriesScreen() {
       ...delivery,
       status: 'received' as const,
     };
-    await upToMiddleDeliveriesStorage.updateItem(
-      updatedDelivery,
-      compareDeliveriesById,
-    );
+    await upToMiddleDeliveriesStorage.updateItem(updatedDelivery);
     setDeliveries(
       deliveries.map((d) => (d.id === delivery.id ? updatedDelivery : d)),
     );
