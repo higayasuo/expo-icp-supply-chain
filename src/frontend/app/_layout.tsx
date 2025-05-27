@@ -97,6 +97,8 @@ function RootLayoutNav() {
             router.replace('/middlestream');
           } else if (role === 'downstream') {
             router.replace('/downstream');
+          } else if (role === 'admin') {
+            router.replace('/admin');
           } else {
             router.replace('/login');
           }
@@ -122,6 +124,7 @@ function RootLayoutNav() {
           <Stack.Screen name="upstream/index" />
           <Stack.Screen name="middlestream/index" />
           <Stack.Screen name="downstream/index" />
+          <Stack.Screen name="admin/index" />
           <Stack.Screen name="+not-found" />
         </Stack>
       </IIIntegrationProvider>

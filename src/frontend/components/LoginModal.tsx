@@ -5,7 +5,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useIIIntegrationContext } from 'expo-ii-integration';
 import { roleStorage } from '@/storage';
 
-type SupplyChainRole = 'upstream' | 'middlestream' | 'downstream';
+type SupplyChainRole = 'upstream' | 'middlestream' | 'downstream' | 'admin';
 
 export const LoginModal = () => {
   const [busy, setBusy] = useState(false);
@@ -74,6 +74,21 @@ export const LoginModal = () => {
                 style={styles.roleIcon}
               />
               <Text style={styles.roleText}>Downstream</Text>
+            </View>
+          </Pressable>
+          <Pressable
+            style={[styles.roleButton, busy && styles.disabled]}
+            onPress={() => handleRoleSelect('admin')}
+            disabled={busy}
+          >
+            <View style={styles.roleContent}>
+              <FontAwesome
+                name="user"
+                size={24}
+                color="#007AFF"
+                style={styles.roleIcon}
+              />
+              <Text style={styles.roleText}>Admin</Text>
             </View>
           </Pressable>
         </View>
