@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,8 @@ export default function ShipPartsScreen() {
   const [selectedProofOfDelivery, setSelectedProofOfDelivery] =
     useState<Delivery | null>(null);
   const [shippedDeliveries, setShippedDeliveries] = useState<Delivery[]>([]);
+  const childPartNumberInputRef = useRef<TextInput>(null);
+  const childQuantityInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const fetchDeliveries = async () => {
@@ -69,13 +71,13 @@ export default function ShipPartsScreen() {
       partNumber: currentChildPartNumber,
       quantity: parseInt(currentChildQuantity),
       proofOfDeliveryId: selectedProofOfDelivery.id,
-      status: 'received',
     };
 
     setChildParts([...childParts, newChildPart]);
     setCurrentChildPartNumber('');
     setCurrentChildQuantity('');
     setSelectedProofOfDelivery(null);
+    childQuantityInputRef.current?.focus();
   };
 
   const handleRemoveChildPart = (index: number) => {
@@ -105,6 +107,10 @@ export default function ShipPartsScreen() {
     setShippedDeliveries([...shippedDeliveries, newDelivery]);
   };
 
+  const isDeliveryUsed = (deliveryId: string) => {
+    return childParts.some((part) => part.proofOfDeliveryId === deliveryId);
+  };
+
   const getRemainingQuantity = (delivery: Delivery) => {
     const usedQuantity = childParts
       .filter((part) => part.proofOfDeliveryId === delivery.id)
@@ -120,7 +126,7 @@ export default function ShipPartsScreen() {
         onBack={() => router.replace('/middlestream')}
         centerTitle
       />
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Create New Delivery</Text>
           <View style={styles.form}>
@@ -156,6 +162,7 @@ export default function ShipPartsScreen() {
                 ) : (
                   receivedDeliveries.map((delivery) => {
                     const remaining = getRemainingQuantity(delivery);
+                    const isUsed = isDeliveryUsed(delivery.id);
                     return (
                       <TouchableOpacity
                         key={delivery.id}
@@ -163,12 +170,15 @@ export default function ShipPartsScreen() {
                           styles.proofOfDeliveryCard,
                           selectedProofOfDelivery?.id === delivery.id &&
                             styles.selectedCard,
+                          isUsed && styles.usedCard,
                         ]}
                         onPress={() => {
-                          setSelectedProofOfDelivery(delivery);
-                          setCurrentChildPartNumber(delivery.part.partNumber);
+                          if (!isUsed) {
+                            setSelectedProofOfDelivery(delivery);
+                            setCurrentChildPartNumber(delivery.part.partNumber);
+                          }
                         }}
-                        disabled={remaining <= 0}
+                        disabled={remaining <= 0 || isUsed}
                       >
                         <View style={styles.proofOfDeliveryHeader}>
                           <Text style={styles.proofOfDeliveryTitle}>
@@ -184,11 +194,35 @@ export default function ShipPartsScreen() {
                               />
                               <Text style={styles.verifiedText}>Verified</Text>
                             </View>
+                            {isUsed && (
+                              <View style={styles.usedBadge}>
+                                <Text style={styles.usedText}>USED</Text>
+                              </View>
+                            )}
                           </View>
                         </View>
                         <Text style={styles.proofOfDeliveryText}>
                           {delivery.part.partNumber} x {delivery.part.quantity}
                         </Text>
+                        {delivery.materials &&
+                          delivery.materials.length > 0 && (
+                            <View style={styles.proofOfDeliveryMaterials}>
+                              <Text
+                                style={styles.proofOfDeliveryMaterialsTitle}
+                              >
+                                Materials:
+                              </Text>
+                              {delivery.materials.map((material, index) => (
+                                <Text
+                                  key={index}
+                                  style={styles.proofOfDeliveryMaterialText}
+                                >
+                                  • {material.name} - {material.quantity}{' '}
+                                  {material.unit}
+                                </Text>
+                              ))}
+                            </View>
+                          )}
                         <Text style={styles.remainingText}>
                           Remaining: {remaining}
                         </Text>
@@ -198,48 +232,51 @@ export default function ShipPartsScreen() {
                 )}
               </View>
 
-              {selectedProofOfDelivery && (
-                <View style={styles.childPartForm}>
-                  <View style={styles.inputRow}>
-                    <TextInput
-                      style={[styles.input, styles.inputPartNumber]}
-                      placeholder="Part Number"
-                      placeholderTextColor="#999"
-                      value={currentChildPartNumber}
-                      onChangeText={setCurrentChildPartNumber}
-                      editable={false}
-                    />
-                    <TextInput
-                      style={[styles.input, styles.inputQuantity]}
-                      placeholder="Quantity"
-                      placeholderTextColor="#999"
-                      value={currentChildQuantity}
-                      onChangeText={setCurrentChildQuantity}
-                      keyboardType="numeric"
-                    />
-                    <TouchableOpacity
-                      style={[
-                        styles.button,
-                        styles.addButton,
-                        (!currentChildQuantity ||
+              {selectedProofOfDelivery &&
+                !isDeliveryUsed(selectedProofOfDelivery.id) && (
+                  <View style={styles.childPartForm}>
+                    <View style={styles.inputRow}>
+                      <TextInput
+                        ref={childPartNumberInputRef}
+                        style={[styles.input, styles.inputPartNumber]}
+                        placeholder="Part Number"
+                        placeholderTextColor="#999"
+                        value={currentChildPartNumber}
+                        onChangeText={setCurrentChildPartNumber}
+                        editable={false}
+                      />
+                      <TextInput
+                        ref={childQuantityInputRef}
+                        style={[styles.input, styles.inputQuantity]}
+                        placeholder="Quantity"
+                        placeholderTextColor="#999"
+                        value={currentChildQuantity}
+                        onChangeText={setCurrentChildQuantity}
+                        keyboardType="numeric"
+                      />
+                      <TouchableOpacity
+                        style={[
+                          styles.button,
+                          styles.addButton,
+                          (!currentChildQuantity ||
+                            parseInt(currentChildQuantity) <= 0 ||
+                            parseInt(currentChildQuantity) >
+                              getRemainingQuantity(selectedProofOfDelivery)) &&
+                            styles.buttonDisabled,
+                        ]}
+                        onPress={handleAddChildPart}
+                        disabled={
+                          !currentChildQuantity ||
                           parseInt(currentChildQuantity) <= 0 ||
                           parseInt(currentChildQuantity) >
-                            getRemainingQuantity(selectedProofOfDelivery)) &&
-                          styles.buttonDisabled,
-                      ]}
-                      onPress={handleAddChildPart}
-                      disabled={
-                        !currentChildQuantity ||
-                        parseInt(currentChildQuantity) <= 0 ||
-                        parseInt(currentChildQuantity) >
-                          getRemainingQuantity(selectedProofOfDelivery)
-                      }
-                    >
-                      <Text style={styles.buttonText}>Add</Text>
-                    </TouchableOpacity>
+                            getRemainingQuantity(selectedProofOfDelivery)
+                        }
+                      >
+                        <Text style={styles.buttonText}>Add</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
-              )}
+                )}
 
               {childParts.length > 0 && (
                 <View style={styles.childPartsList}>
@@ -265,6 +302,31 @@ export default function ShipPartsScreen() {
                         <Text style={styles.proofOfDeliveryText}>
                           From Delivery #{part.proofOfDeliveryId}
                         </Text>
+                        {(() => {
+                          const originalDelivery = receivedDeliveries.find(
+                            (d) => d.id === part.proofOfDeliveryId,
+                          );
+                          return (
+                            originalDelivery?.materials && (
+                              <View style={styles.childPartMaterials}>
+                                <Text style={styles.childPartMaterialsTitle}>
+                                  Materials:
+                                </Text>
+                                {originalDelivery.materials.map(
+                                  (material, index) => (
+                                    <Text
+                                      key={index}
+                                      style={styles.childPartMaterialText}
+                                    >
+                                      • {material.name} - {material.quantity}{' '}
+                                      {material.unit}
+                                    </Text>
+                                  ),
+                                )}
+                              </View>
+                            )
+                          );
+                        })()}
                       </View>
                       <TouchableOpacity
                         onPress={() => handleRemoveChildPart(index)}
@@ -333,6 +395,18 @@ export default function ShipPartsScreen() {
                     {delivery.part.partNumber} x {delivery.part.quantity}
                   </Text>
                 </View>
+                {delivery.materials && delivery.materials.length > 0 && (
+                  <View style={styles.materialsSection}>
+                    <Text style={styles.materialsTitle}>Materials:</Text>
+                    {delivery.materials.map((material, index) => (
+                      <View key={index} style={styles.materialItem}>
+                        <Text style={styles.materialText}>
+                          {material.name} - {material.quantity} {material.unit}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
                 {delivery.part.childParts &&
                   delivery.part.childParts.length > 0 && (
                     <View style={styles.childPartsList}>
@@ -361,6 +435,33 @@ export default function ShipPartsScreen() {
                             <Text style={styles.proofOfDeliveryText}>
                               From Delivery #{part.proofOfDeliveryId}
                             </Text>
+                            {(() => {
+                              const originalDelivery = receivedDeliveries.find(
+                                (d) => d.id === part.proofOfDeliveryId,
+                              );
+                              return (
+                                originalDelivery?.materials && (
+                                  <View style={styles.childPartMaterials}>
+                                    <Text
+                                      style={styles.childPartMaterialsTitle}
+                                    >
+                                      Materials:
+                                    </Text>
+                                    {originalDelivery.materials.map(
+                                      (material, index) => (
+                                        <Text
+                                          key={index}
+                                          style={styles.childPartMaterialText}
+                                        >
+                                          • {material.name} -{' '}
+                                          {material.quantity} {material.unit}
+                                        </Text>
+                                      ),
+                                    )}
+                                  </View>
+                                )
+                              );
+                            })()}
                           </View>
                         </View>
                       ))}
@@ -630,5 +731,81 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  materialsSection: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 8,
+  },
+  materialsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
+  materialItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  materialText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  proofOfDeliveryMaterials: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+  },
+  proofOfDeliveryMaterialsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 6,
+  },
+  proofOfDeliveryMaterialText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  childPartMaterials: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+  },
+  childPartMaterialsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 6,
+  },
+  childPartMaterialText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  usedCard: {
+    opacity: 0.5,
+    backgroundColor: '#F0F0F0',
+  },
+  usedBadge: {
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  usedText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

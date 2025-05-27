@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,19 @@ import {
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { RoleHeader } from '@/components/RoleHeader';
-import { Delivery } from '@/types';
+import { Delivery, Material } from '@/types';
 import { upToMiddleDeliveriesStorage } from '@/storage';
 
 export default function DeliveriesScreen() {
   const [currentPartNumber, setCurrentPartNumber] = useState('');
   const [currentQuantity, setCurrentQuantity] = useState('');
+  const [currentMaterialName, setCurrentMaterialName] = useState('');
+  const [currentMaterialQuantity, setCurrentMaterialQuantity] = useState('');
+  const [currentMaterialUnit, setCurrentMaterialUnit] = useState('g');
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const materialNameInputRef = useRef<TextInput>(null);
+  const partNumberInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const fetchDeliveries = async () => {
@@ -28,8 +34,28 @@ export default function DeliveriesScreen() {
     fetchDeliveries();
   }, []);
 
+  const handleAddMaterial = () => {
+    if (!currentMaterialName || !currentMaterialQuantity) return;
+
+    const newMaterial: Material = {
+      name: currentMaterialName,
+      quantity: parseFloat(currentMaterialQuantity),
+      unit: currentMaterialUnit,
+    };
+
+    setMaterials([...materials, newMaterial]);
+    setCurrentMaterialName('');
+    setCurrentMaterialQuantity('');
+    materialNameInputRef.current?.focus();
+  };
+
+  const handleRemoveMaterial = (index: number) => {
+    setMaterials(materials.filter((_, i) => i !== index));
+  };
+
   const handleCreateDelivery = async () => {
-    if (!currentPartNumber || !currentQuantity) return;
+    if (!currentPartNumber || !currentQuantity || materials.length === 0)
+      return;
 
     const newDelivery: Delivery = {
       id: Date.now().toString(),
@@ -37,6 +63,7 @@ export default function DeliveriesScreen() {
         partNumber: currentPartNumber,
         quantity: parseInt(currentQuantity),
       },
+      materials: materials,
       status: 'in-transit',
       from: 'upstream',
       to: 'middlestream',
@@ -47,6 +74,8 @@ export default function DeliveriesScreen() {
     setDeliveries([newDelivery, ...deliveries]);
     setCurrentPartNumber('');
     setCurrentQuantity('');
+    setMaterials([]);
+    partNumberInputRef.current?.focus();
   };
 
   const getStatusColor = (status: Delivery['status']) => {
@@ -68,12 +97,13 @@ export default function DeliveriesScreen() {
         onBack={() => router.replace('/upstream')}
         centerTitle
       />
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ship Parts</Text>
           <View style={styles.form}>
             <View style={styles.inputRow}>
               <TextInput
+                ref={partNumberInputRef}
                 style={[styles.input, styles.inputPartNumber]}
                 placeholder="Part Number"
                 placeholderTextColor="#999"
@@ -89,14 +119,81 @@ export default function DeliveriesScreen() {
                 keyboardType="numeric"
               />
             </View>
+
+            <View style={styles.materialsSection}>
+              <Text style={styles.materialsTitle}>Materials</Text>
+              <View style={styles.inputRow}>
+                <TextInput
+                  ref={materialNameInputRef}
+                  style={[styles.input, styles.inputMaterialName]}
+                  placeholder="Material Name"
+                  placeholderTextColor="#999"
+                  value={currentMaterialName}
+                  onChangeText={setCurrentMaterialName}
+                />
+                <TextInput
+                  style={[styles.input, styles.inputMaterialQuantity]}
+                  placeholder="Quantity"
+                  placeholderTextColor="#999"
+                  value={currentMaterialQuantity}
+                  onChangeText={setCurrentMaterialQuantity}
+                  keyboardType="numeric"
+                />
+                <TextInput
+                  style={[styles.input, styles.inputMaterialUnit]}
+                  placeholder="Unit"
+                  placeholderTextColor="#999"
+                  value={currentMaterialUnit}
+                  onChangeText={setCurrentMaterialUnit}
+                />
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  (!currentMaterialName || !currentMaterialQuantity) &&
+                    styles.buttonDisabled,
+                ]}
+                onPress={handleAddMaterial}
+                disabled={!currentMaterialName || !currentMaterialQuantity}
+              >
+                <Text style={styles.buttonText}>Add Material</Text>
+              </TouchableOpacity>
+
+              {materials.length > 0 && (
+                <View style={styles.materialsList}>
+                  {materials.map((material, index) => (
+                    <View key={index} style={styles.materialItem}>
+                      <Text style={styles.materialText}>
+                        {material.name} - {material.quantity} {material.unit}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => handleRemoveMaterial(index)}
+                        style={styles.removeButton}
+                      >
+                        <FontAwesome
+                          name="times-circle"
+                          size={20}
+                          color="#FF3B30"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
             <TouchableOpacity
               style={[
                 styles.button,
-                (!currentPartNumber || !currentQuantity) &&
+                (!currentPartNumber ||
+                  !currentQuantity ||
+                  materials.length === 0) &&
                   styles.buttonDisabled,
               ]}
               onPress={handleCreateDelivery}
-              disabled={!currentPartNumber || !currentQuantity}
+              disabled={
+                !currentPartNumber || !currentQuantity || materials.length === 0
+              }
             >
               <Text style={styles.buttonText}>Ship Parts</Text>
             </TouchableOpacity>
@@ -141,6 +238,17 @@ export default function DeliveriesScreen() {
                     {delivery.part.partNumber} x {delivery.part.quantity}
                   </Text>
                 </View>
+                {delivery.materials && (
+                  <View style={styles.materialsList}>
+                    {delivery.materials.map((material, index) => (
+                      <View key={index} style={styles.materialItem}>
+                        <Text style={styles.materialText}>
+                          {material.name} - {material.quantity} {material.unit}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
                 <Text style={styles.deliveryInfo}>
                   From: {delivery.from} → To: {delivery.to}
                 </Text>
@@ -194,6 +302,15 @@ const styles = StyleSheet.create({
   inputQuantity: {
     flex: 1,
   },
+  inputMaterialName: {
+    flex: 2,
+  },
+  inputMaterialQuantity: {
+    flex: 1,
+  },
+  inputMaterialUnit: {
+    flex: 1,
+  },
   button: {
     backgroundColor: '#007AFF',
     padding: 12,
@@ -207,6 +324,39 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  materialsSection: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 8,
+  },
+  materialsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  materialsList: {
+    marginTop: 12,
+    gap: 8,
+  },
+  materialItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  materialText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  removeButton: {
+    padding: 4,
   },
   deliveryCard: {
     backgroundColor: '#fff',

@@ -11,7 +11,6 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { RoleHeader } from '@/components/RoleHeader';
 import { Delivery } from '@/types';
 import { upToMiddleDeliveriesStorage } from '@/storage';
-import { compareDeliveriesById } from '@/storage/DeliveriesStorage';
 
 export default function ReceiveDeliveriesScreen() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -107,6 +106,18 @@ export default function ReceiveDeliveriesScreen() {
                     {delivery.part.partNumber} x {delivery.part.quantity}
                   </Text>
                 </View>
+                {delivery.materials && delivery.materials.length > 0 && (
+                  <View style={styles.materialsSection}>
+                    <Text style={styles.materialsTitle}>Materials:</Text>
+                    {delivery.materials.map((material, index) => (
+                      <View key={index} style={styles.materialItem}>
+                        <Text style={styles.materialText}>
+                          {material.name} - {material.quantity} {material.unit}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
                 {getOriginalDeliveryInfo(delivery)}
                 <Text style={styles.deliveryInfo}>
                   Created: {new Date(delivery.timestamp).toLocaleString()}
@@ -289,5 +300,32 @@ const styles = StyleSheet.create({
   originalPartText: {
     fontSize: 14,
     color: '#666',
+  },
+  materialsSection: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 8,
+  },
+  materialsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
+  materialItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  materialText: {
+    fontSize: 14,
+    color: '#333',
   },
 });

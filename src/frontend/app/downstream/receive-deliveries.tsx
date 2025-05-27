@@ -10,17 +10,27 @@ import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { RoleHeader } from '@/components/RoleHeader';
 import { Delivery } from '@/types';
-import { middleToDownDeliveriesStorage } from '@/storage';
+import {
+  middleToDownDeliveriesStorage,
+  upToMiddleDeliveriesStorage,
+} from '@/storage';
 import { compareDeliveriesById } from '@/storage/DeliveriesStorage';
 
 export default function ReceiveDeliveriesScreen() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [originalDeliveries, setOriginalDeliveries] = useState<Delivery[]>([]);
 
   useEffect(() => {
     const fetchDeliveries = async () => {
       const deliveries = await middleToDownDeliveriesStorage.find();
       if (deliveries) {
         setDeliveries(deliveries);
+
+        // Fetch original deliveries for materials information
+        const originalDeliveries = await upToMiddleDeliveriesStorage.find();
+        if (originalDeliveries) {
+          setOriginalDeliveries(originalDeliveries);
+        }
       }
     };
     fetchDeliveries();
@@ -130,6 +140,33 @@ export default function ReceiveDeliveriesScreen() {
                             <Text style={styles.proofOfDeliveryText}>
                               From Delivery #{part.proofOfDeliveryId}
                             </Text>
+                            {(() => {
+                              const originalDelivery = originalDeliveries.find(
+                                (d) => d.id === part.proofOfDeliveryId,
+                              );
+                              return (
+                                originalDelivery?.materials && (
+                                  <View style={styles.childPartMaterials}>
+                                    <Text
+                                      style={styles.childPartMaterialsTitle}
+                                    >
+                                      Materials:
+                                    </Text>
+                                    {originalDelivery.materials.map(
+                                      (material, index) => (
+                                        <Text
+                                          key={index}
+                                          style={styles.childPartMaterialText}
+                                        >
+                                          • {material.name} -{' '}
+                                          {material.quantity} {material.unit}
+                                        </Text>
+                                      ),
+                                    )}
+                                  </View>
+                                )
+                              );
+                            })()}
                           </View>
                         </View>
                       ))}
@@ -300,5 +337,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  childPartMaterials: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+  },
+  childPartMaterialsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 6,
+  },
+  childPartMaterialText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
   },
 });
